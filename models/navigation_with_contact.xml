@@ -1,0 +1,92 @@
+<mujoco model="navigation">
+    <compiler angle="radian" autolimits="true" />
+    <option gravity="0 0 -9.81" timestep="0.01" />
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512"/>
+        <texture name="plane_tex" type="2d" builtin="checker" width="512" height="512"
+            rgb1=".6 .6 .6" rgb2=".3 .3 .3" />
+        <material name="floor_mat" texture="plane_tex" />
+    </asset>
+    <worldbody>
+        <camera name="main_camera" mode="fixed"  pos="0.150 4.587 11.581" xyaxes="-0.999 0.033 0.000 -0.030 -0.923 0.383" output="rgb" />
+
+        <light directional="true" />
+        <geom name="floor" type="plane" size="0 0 0.1" pos="0 0 0" material="floor_mat" condim="3" />
+
+        <geom name="wall_x0" type="box" size="0.1 3.0 0.5" pos="-4.1 0 0.5" />
+        <geom name="wall_x1" type="box" size="0.1 3.0 0.5" pos="4.1 0 0.5" />
+
+        <geom name="wall_y0" type="box" size="4.2 0.1 0.5" pos="0.0 -3.1 0.5" />
+        <geom name="wall_y1" type="box" size="4.2 0.1 0.5" pos="0.0 3.1 0.5" />
+
+
+        <body name="robot">
+            <freejoint name="robot_base" />
+            <body name="lidar_frame" pos="0 0 0.108">
+                <replicate count="360" sep="_rf_" euler="0 0 0.017453292519943295">
+                    <site name="lidar_site" type="sphere" size="0.004" zaxis="1 0 0" pos="0.0 0 0"
+                        rgba="0.5 0.5 0.5 0.0" />
+                </replicate>
+            </body>
+            <site name="head_mark" type="cylinder" size="0.02 0.002" rgba="0.5 0.1 0.1 1"
+                pos="0.15 0 0.102" />
+            <body name="robot_body" pos="0 0 0.07">
+                <geom name="robot_body_geom" type="cylinder" size="0.176 0.03"
+                    rgba="0.5 0.5 0.5 1.0" mass="2.0" condim="3" />
+            <site name="robot_body_site" type="cylinder" size="0.178 0.03" rgba="0.5 0.1 0.1 0.0"/>
+            </body>
+            <body name="left_wheel" pos="0 0.11016 0.03725">
+                <joint name="left_wheel_joint" type="hinge" axis="0 1 0"  armature="0.01" damping="0.01"/>
+                <geom name="left_wheel_geom" type="cylinder" size="0.03725"
+                    fromto="0 -0.01 0 0 0.01 0" rgba="0.1 0.1 0.1 1" mass="0.1" condim="3"
+                    friction="0.7" solref="0.015 1" solimp="0.9 0.99 0.003" />
+            </body>
+            <body name="right_wheel" pos="0 -0.11016 0.03725">
+                <joint name="right_wheel_joint" type="hinge" axis="0 1 0"  armature="0.01" damping="0.01"/>
+                <geom name="right_wheel_geom" type="cylinder" size="0.03725"
+                    fromto="0 -0.01 0 0 0.01 0" rgba="0.1 0.1 0.1 1" mass="0.1" condim="3"
+                    friction="0.7" solref="0.015 1" solimp="0.9 0.99 0.003" />
+            </body>
+            <body name="back_wheel" pos="-0.15 0.0 0.01">
+                <joint name="back_wheel_joint" type="ball" damping="0.0" />
+                <geom name="back_wheel_geom" type="sphere" size="0.01" rgba="0.1 0.1 0.1 1"
+                    mass="0.01" condim="3" friction="0.7" solref="0.015 1" solimp="0.9 0.99 0.003"/>
+            </body>
+
+            <body name="front_wheel" pos="0.1329  0.0 0.04">
+                <joint name="front_wheel_base_joint" type="hinge" axis="0 0 1" damping="0.0001" />
+                <geom name="front_wheel_base_geom" type="cylinder" size="0.01 0.005"
+                    rgba="0.5 0.5 0.5 1" mass="0.05" condim="3" />
+                <body name="front_wheel_wheel" pos="-0.0104 0.0 -0.026">
+                    <joint name="front_wheel_wheel_joint" type="hinge" axis="0 1 0" damping="0.0001" />
+                    <geom name="front_wheel_wheel_geom" type="cylinder" size="0.014"
+                        fromto="0 -0.005 0 0 0.005 0" rgba="0.5 0.5 0.5 1" mass="0.05" condim="3" friction="0.7" solref="0.015 1" solimp="0.9 0.99 0.003" />
+                </body>
+            </body>
+        </body>
+    </worldbody>
+    <contact>
+        <exclude body1="robot_body" body2="left_wheel" />
+        <exclude body1="robot_body" body2="right_wheel" />
+        <exclude body1="robot_body" body2="front_wheel" />
+    </contact>
+    <actuator>
+        <velocity name="left_wheel_motor" joint="left_wheel_joint" ctrlrange="-10.81 10.81"/>
+        <velocity name="right_wheel_motor" joint="right_wheel_joint" ctrlrange="-10.81 10.81"/>
+    </actuator>
+    <sensor>
+        <rangefinder name="lidar" site="lidar_site" cutoff="10.0" />
+        <framepos name="robot_pos" objtype="body" objname="robot_body" reftype="geom"
+            refname="floor" />
+        <framequat name="robot_quat" objtype="body" objname="robot_body" reftype="geom"
+            refname="floor" />
+        <framelinvel name="robot_linvel" objtype="body" objname="robot_body" reftype="geom"
+            refname="floor" />
+        <frameangvel name="robot_angvel" objtype="body" objname="robot_body" reftype="geom"
+            refname="floor" />
+        <jointvel name="left_joint_vel" joint="left_wheel_joint" />
+        <jointvel name="right_joint_vel" joint="right_wheel_joint" />
+        <touch name="contact_sensor" site="robot_body_site" />
+    </sensor>
+</mujoco>
